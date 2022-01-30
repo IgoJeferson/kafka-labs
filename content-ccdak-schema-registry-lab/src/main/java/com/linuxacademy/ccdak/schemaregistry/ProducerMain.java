@@ -28,7 +28,7 @@ public class ProducerMain {
 
         try (KafkaProducer<String, Purchase> producer = new KafkaProducer<String, Purchase>(props)) {
 
-            for (long i = 0; i < 10; i++) {
+            for (int i = 0; i < 10; i++) {
                 final String orderId = "id" + Long.toString(i);
                 final Purchase purchase = new Purchase(i, "Apple " + i , 15);
                 final ProducerRecord<String, Purchase> record = new ProducerRecord<String, Purchase>(TOPIC, purchase.getId().toString(), purchase);
