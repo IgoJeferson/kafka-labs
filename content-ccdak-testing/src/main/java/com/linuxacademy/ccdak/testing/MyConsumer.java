@@ -35,7 +35,8 @@ public class MyConsumer {
         }
         
     }
-    
+
+    // Extract the method that handle the messages to facilitate the unit test
     public void handleRecords() {
         ConsumerRecords<Integer, String> records = consumer.poll(Duration.ofMillis(100));
         for (ConsumerRecord<Integer, String> record : records) {
