@@ -36,7 +36,7 @@ public class MyProducerTest {
     @Before
     public void setUpStreams(){
         systemErrContent = new ByteArrayOutputStream();
-        systemErrContent = new ByteArrayOutputStream();
+        systemOutContent = new ByteArrayOutputStream();
         System.setOut(new PrintStream(systemOutContent));
         System.setErr(new PrintStream(systemErrContent));
     }
@@ -48,22 +48,52 @@ public class MyProducerTest {
     }
 
     @Test
-    public void testPublishRecord_sent_data(){
-        // Perform a simple test to verify that the producer sends the correct data to
-        // the correct topic when publishRecord is called.
-        myProducer.publishRecord(1, "Test Data");
-
+    public void testHandleMemberSignup_sent_data() {
+        // Perform a simple test to verify that the producer sends the correct data to the correct topic when handleMemberSignup is called.
+        // Verify that the published record has the memberId as the key and the uppercased name as the value.
+        // Verify that the records is sent to the member_signups topic.
+        myProducer.handleMemberSignup(10, "Hello World");
         mockProducer.completeNext();
 
         List<ProducerRecord<Integer, String>> records = mockProducer.history();
-
-        Assert.assertEquals(1, records.size());
         ProducerRecord<Integer, String> record = records.get(0);
-        Assert.assertEquals("Test Data", record.value());
-        Assert.assertEquals("test_topic", record.topic());
-        Assert.assertEquals("key=1, value=Test Data\n", systemOutContent.toString());
+        Assert.assertEquals("member_signups", record.topic());
+        Assert.assertEquals("HELLO WORLD", record.value());
+        Assert.assertEquals(Integer.valueOf(10), record.key());
 
     }
 
-    
+    @Test
+    public void testHandleMemberSignup_partitioning() {
+        // Verify that records with a value starting with A-M are assigned to partition 0, and that others are assigned to partition 1.
+        // You can send two records in this test, one with a value that begins with A-M and the other that begins with N-Z.
+        myProducer.handleMemberSignup(3, "Attempt");
+        myProducer.handleMemberSignup(4, "Zen");
+        mockProducer.completeNext();
+
+        List<ProducerRecord<Integer, String>> records = mockProducer.history();
+        Assert.assertEquals(2, records.size());
+        Assert.assertEquals(Integer.valueOf(0), records.get(0).partition());
+        Assert.assertEquals(Integer.valueOf(1), records.get(1).partition());
+
+    }
+
+    @Test
+    public void testHandleMemberSignup_output() {
+        // Verify that the producer logs the record data to System.out.
+        // A text fixture called systemOutContent has already been set up in this class to capture System.out data.
+        myProducer.handleMemberSignup(1, "Zen");
+        mockProducer.completeNext();
+        Assert.assertEquals("key=1, value=ZEN\n", systemOutContent.toString());
+    }
+
+    @Test
+    public void testHandleMemberSignup_error() {
+        // Verify that the producer logs the error message to System.err if an error occurs when sending a record.
+        // A text fixture called systemErrContent has already been set up in this class to capture System.err data.
+        myProducer.handleMemberSignup(1, "Zen");
+        mockProducer.errorNext(new RuntimeException("test error"));
+        Assert.assertEquals("test error\n", systemErrContent.toString());
+    }
+
 }

@@ -24,9 +24,15 @@ public class MyProducer {
         
         producer = new KafkaProducer<>(props);
     }
-    
-    public void publishRecord(Integer key, String value) {
-        ProducerRecord record = new ProducerRecord<>("test_topic", key, value);
+
+    public void handleMemberSignup(Integer memberId, String name) {
+        int partition;
+        if (name.toUpperCase().charAt(0) <= 'M') {
+            partition = 0;
+        } else {
+            partition = 1;
+        }
+        ProducerRecord record = new ProducerRecord<>("member_signups", partition, memberId, name.toUpperCase());
         producer.send(record, (RecordMetadata recordMetadata, Exception e) -> {
             if (e != null) {
                 System.err.println(e.getMessage());

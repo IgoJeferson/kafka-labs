@@ -27,18 +27,17 @@ public class MyConsumer {
         consumer = new KafkaConsumer<>(props);
         consumer.subscribe(Arrays.asList("test_topic"));
     }
-    
+
     public void run() {
-        
+
         while (true) {
-            handleRecords();
+            ConsumerRecords<Integer, String> records = consumer.poll(Duration.ofMillis(100));
+            handleRecords(records);
         }
-        
+
     }
 
-    // Extract the method that handle the messages to facilitate the unit test
-    public void handleRecords() {
-        ConsumerRecords<Integer, String> records = consumer.poll(Duration.ofMillis(100));
+    public void handleRecords(ConsumerRecords<Integer, String> records) {
         for (ConsumerRecord<Integer, String> record : records) {
             System.out.println("key=" + record.key() + ", value=" + record.value() + ", topic=" + record.topic() + ", partition=" + record.partition() + ", offset=" + record.offset());
         }
